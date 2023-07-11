@@ -1,0 +1,13 @@
+setup.py
+mdlCpEcsMdpy/__init__.py
+mdlCpEcsMdpy/customer.py
+mdlCpEcsMdpy/main.py
+mdlCpEcsMdpy/material.py
+mdlCpEcsMdpy/supplier.py
+mdlCpEcsMdpy/threebasicdata.py
+mdlCpEcsMdpy.egg-info/PKG-INFO
+mdlCpEcsMdpy.egg-info/SOURCES.txt
+mdlCpEcsMdpy.egg-info/dependency_links.txt
+mdlCpEcsMdpy.egg-info/requires.txt
+mdlCpEcsMdpy.egg-info/top_level.txt
+tests/test.py
