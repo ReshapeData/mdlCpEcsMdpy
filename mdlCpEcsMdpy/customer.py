@@ -877,25 +877,25 @@ def CUSTOMERNAME_get_ECS(app2,app3,option1,CUSTOMERNAMES):
             # 判断纳税登记号是否为空
             if data['FCOUNTRY'] == '中国' and data['FTAXREGISTERCODE'] == '':
                 ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '纳税登记号为空'}]}}}
-                insert_log(app2, ero, data['FNumber'])
+                insert_log(app3, ero, data['FNumber'])
                 print(f"{data['FName']}纳税登记号为空")
                 continue
             if data['FTRADINGCURRNO'] == '':
                 ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '结算币别为空'}]}}}
-                insert_log(app2, ero, data['FNumber'])
+                insert_log(app3, ero, data['FNumber'])
                 print(f"{data['FName']}结算币别为空")
                 continue
 
             # 查重
             sql = f"""select FName from RDS_ECS_SRC_BD_CUSTOMER"""
-            fdata = app2.select(sql)
+            fdata = app3.select(sql)
             fnames = []
             for name_date in fdata:
                 fnames.append(name_date['FName'])
 
             # 插入
             if data['FName'] not in fnames:
-                insert_data(app2, data)
+                insert_data(app3, data)
                 acc = NOAccount()
                 acc.update_RDS_ECS_ODS_BD_CUSTOMER()
                 print(f"{data['FNumber']}插入成功")

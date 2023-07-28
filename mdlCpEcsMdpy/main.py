@@ -8,14 +8,10 @@ from pyrda.dbms.rds import RdClient
 from k3cloud_webapi_sdk.main import K3CloudApiSdk
 import json
 
-def FBillNo_sync(token, category, FNumber,FName="赛普集团新账套"):
+
+def materialByFNumber_sync(token,FNumber,FName="赛普集团新账套"):
     '''
-    按照单据编号同步
-    :param app2:
-    :param app3:
-    :param option:
-    :param category:
-    :param FNumber:
+    物料按货号同步
     :return:
     '''
 
@@ -25,56 +21,28 @@ def FBillNo_sync(token, category, FNumber,FName="赛普集团新账套"):
 
     key = app3.select(sql)
 
-    # app2 = RdClient(token='57DEDF26-5C00-4CA9-BBF7-57ECE07E179B')
     app2 = RdClient(token=key[0]["FApp2"])
 
     option = {
         "acct_id": key[0]["acct_id"],
         "user_name": key[0]["user_name"],
         "app_id": key[0]["app_id"],
-        # "app_sec": 'd019b038bc3c4b02b962e1756f49e179',
         "app_sec": key[0]["app_sec"],
-        # "server_url": 'http://192.168.1.13/K3Cloud',
         "server_url": key[0]["server_url"],
     }
 
-    data = []
+    l = []
+    l.append(FNumber)
 
-    if category == '客户':
-
-        # 客户的名称
-        l = []
-        l.append(FNumber)
-
-        data=customer.CUSTOMERNAME_get_ECS(app2=app2,app3=app3,option1=option,CUSTOMERNAMES=l)
-
-        pass
-    if category == '物料':
-        # 列表格式
-
-        l=[]
-        l.append(FNumber)
-
-        data=material.performFNumber(app2=app2,app3=app3,option1=option,codeList=l)
-        pass
-    if category == '供应商':
-        # 列表格式
-        l=[]
-        l.append(FNumber)
-        data=supplier.FNAME_get_supplier(app2=app2,app3=app3,option1=option,fname_list=l)
-        pass
+    data = material.performFNumber(app2=app2, app3=app3, option1=option, codeList=l)
 
     return data
 
 
-def FBillNo_sync_byDate(token, category, FDate,FName="赛普集团新账套"):
+def customerByFName_sync(token,FCustomerName,FName="赛普集团新账套"):
+
     '''
-    按照日期同步
-    :param app2:
-    :param app3:
-    :param option:
-    :param category:
-    :param FNumber:
+    客户按名称同步
     :return:
     '''
 
@@ -84,38 +52,143 @@ def FBillNo_sync_byDate(token, category, FDate,FName="赛普集团新账套"):
 
     key = app3.select(sql)
 
-    # app2 = RdClient(token='57DEDF26-5C00-4CA9-BBF7-57ECE07E179B')
     app2 = RdClient(token=key[0]["FApp2"])
 
     option = {
         "acct_id": key[0]["acct_id"],
         "user_name": key[0]["user_name"],
         "app_id": key[0]["app_id"],
-        # "app_sec": 'd019b038bc3c4b02b962e1756f49e179',
         "app_sec": key[0]["app_sec"],
-        # "server_url": 'http://192.168.1.13/K3Cloud',
         "server_url": key[0]["server_url"],
     }
 
-    data = []
+    # 客户的名称
+    l = []
 
-    if category == '客户':
+    l.append(FCustomerName)
 
-        # 客户的名称
-        data=customer.FCREATEDATE_get_ECS(app2=app2,app3=app3,option1=option,starttime=FDate, endtime=FDate)
-
-        pass
-    if category == '物料':
-        # 列表格式
-        data=material.performFNumber_bydate(app2=app2,app3=app3,option1=option,FDate=FDate)
-        pass
-    if category == '供应商':
-        # 列表格式
-
-        data=supplier.FNAME_get_supplier_bydate(app2=app2,app3=app3,option1=option,Fdate=FDate)
-        pass
+    data = customer.CUSTOMERNAME_get_ECS(app2=app2, app3=app3, option1=option, CUSTOMERNAMES=l)
 
     return data
+
+
+
+def supplierByFName_sync(token,FSupplierName,FName="赛普集团新账套"):
+
+    '''
+    供应商按名称同步
+    :return:
+    '''
+
+    app3 = RdClient(token=token)
+
+    sql = f"select * from rds_key_values where FName='{FName}'"
+
+    key = app3.select(sql)
+
+    app2 = RdClient(token=key[0]["FApp2"])
+
+    option = {
+        "acct_id": key[0]["acct_id"],
+        "user_name": key[0]["user_name"],
+        "app_id": key[0]["app_id"],
+        "app_sec": key[0]["app_sec"],
+        "server_url": key[0]["server_url"],
+    }
+
+    # 列表格式
+    l = []
+    l.append(FSupplierName)
+
+    data = supplier.FNAME_get_supplier(app2=app2, app3=app3, option1=option, fname_list=l)
+
+    return data
+
+
+
+def materialByDate_sync(token,FDate,FName="赛普集团新账套"):
+    '''
+    供应商按名称日期
+    :return:
+    '''
+
+    app3 = RdClient(token=token)
+
+    sql = f"select * from rds_key_values where FName='{FName}'"
+
+    key = app3.select(sql)
+
+    app2 = RdClient(token=key[0]["FApp2"])
+
+    option = {
+        "acct_id": key[0]["acct_id"],
+        "user_name": key[0]["user_name"],
+        "app_id": key[0]["app_id"],
+        "app_sec": key[0]["app_sec"],
+        "server_url": key[0]["server_url"],
+    }
+
+    data=material.performFNumber_bydate(app2=app2,app3=app3,option1=option,FDate=FDate)
+    
+    return data
+
+
+def customerByDate_sync(token,FDate,FName="赛普集团新账套"):
+
+    '''
+    供应商按名称日期
+    :return:
+    '''
+
+    app3 = RdClient(token=token)
+
+    sql = f"select * from rds_key_values where FName='{FName}'"
+
+    key = app3.select(sql)
+
+    app2 = RdClient(token=key[0]["FApp2"])
+
+    option = {
+        "acct_id": key[0]["acct_id"],
+        "user_name": key[0]["user_name"],
+        "app_id": key[0]["app_id"],
+        "app_sec": key[0]["app_sec"],
+        "server_url": key[0]["server_url"],
+    }
+
+    data = customer.FCREATEDATE_get_ECS(app2=app2, app3=app3, option1=option, starttime=FDate, endtime=FDate)
+
+    return data
+
+
+
+def supplierByDate_sync(token,FDate,FName="赛普集团新账套"):
+
+    '''
+    供应商按名称日期
+    :return:
+    '''
+
+    app3 = RdClient(token=token)
+
+    sql = f"select * from rds_key_values where FName='{FName}'"
+
+    key = app3.select(sql)
+
+    app2 = RdClient(token=key[0]["FApp2"])
+
+    option = {
+        "acct_id": key[0]["acct_id"],
+        "user_name": key[0]["user_name"],
+        "app_id": key[0]["app_id"],
+        "app_sec": key[0]["app_sec"],
+        "server_url": key[0]["server_url"],
+    }
+
+    data=supplier.FNAME_get_supplier_bydate(app2=app2,app3=app3,option1=option,Fdate=FDate)
+
+    return data
+
 
 
 def getDataSource_byOrder(app3, tablename, field, FNumber):
@@ -131,38 +204,53 @@ def getDataSource_byOrder(app3, tablename, field, FNumber):
     return res
 
 
-def SRCTable_query(token, category, FNumber):
+def materialByFNumber_query(token,FNumber):
     '''
-    按照单据编号查询
-    :param app3:
-    :param category:
-    :param FNumber:
+    物料按编号查询
     :return:
     '''
 
     app3 = RdClient(token=token)
 
-    data = []
+    data = getDataSource_byOrder(app3=app3, tablename="RDS_ECS_src_bd_MaterialDetail", field="FNumber",
+                                 FNumber=FNumber)
 
-    if category == '客户':
-        data = getDataSource_byOrder(app3=app3, tablename="RDS_ECS_src_BD_CUSTOMER", field="FNumber",
-                                     FNumber=FNumber)
+    df=pd.DataFrame(data)
 
-        pass
-    if category == '物料':
-        data = getDataSource_byOrder(app3=app3, tablename="RDS_ECS_src_bd_MaterialDetail", field="FNumber",
-                                     FNumber=FNumber)
+    return df
 
-        pass
-    if category == '供应商':
-        data = getDataSource_byOrder(app3=app3, tablename="RDS_ECS_src_bd_SupplierDetail", field="FNumber",
-                                     FNumber=FNumber)
 
-        pass
+def customerByFNumber_query(token,FNumber):
+    '''
+    客户编号查询
+    :return:
+    '''
 
-    res = pd.DataFrame(data)
+    app3 = RdClient(token=token)
 
-    return res
+    data = getDataSource_byOrder(app3=app3, tablename="RDS_ECS_src_BD_CUSTOMER", field="FNumber",
+                                 FNumber=FNumber)
+
+    df = pd.DataFrame(data)
+
+    return df
+
+
+def supplierByFNumber_query(token,FNumber):
+    '''
+    供应商编号查询
+    :return:
+    '''
+
+    app3 = RdClient(token=token)
+
+    data = getDataSource_byOrder(app3=app3, tablename="RDS_ECS_src_bd_SupplierDetail", field="FNumber",
+                                 FNumber=FNumber)
+
+    df = pd.DataFrame(data)
+
+    return df
+
 
 
 
@@ -172,8 +260,6 @@ def getDataSource_byDate(app3, tablename, field, FStartDate):
     :param FNumber:
     :return:
     '''
-    # sql = f"""select * from {tablename} where {field}>='{FStartDate}' and {field}<='{FEndDate}'"""
-
     sql = f"""select * from {tablename} where {field} like '{FStartDate}'"""
 
     res = app3.select(sql)
@@ -182,38 +268,54 @@ def getDataSource_byDate(app3, tablename, field, FStartDate):
 
     return df
 
-def SRCTable_queryByDate(token, category, FStartDate):
+
+
+def materialByDate_query(token,FDate):
     '''
-    按照日期查询
-    :param app3:
-    :param category:
-    :param FNumber:
+    物料按日期查询
     :return:
     '''
 
     app3 = RdClient(token=token)
 
-    data = []
+    data = getDataSource_byDate(app3=app3, tablename="RDS_ECS_src_bd_MaterialDetail", field="FVarDateTime",
+                                FStartDate=FDate)
 
-    if category == '客户':
-        data = getDataSource_byDate(app3=app3, tablename="RDS_ECS_src_BD_CUSTOMER", field="FDate",
-                                    FStartDate=FStartDate)
+    df=pd.DataFrame(data)
 
-        pass
-    if category == '物料':
-        data = getDataSource_byDate(app3=app3, tablename="RDS_ECS_src_bd_MaterialDetail", field="FVarDateTime",
-                                    FStartDate=FStartDate)
+    return df
 
-        pass
-    if category == '供应商':
-        data = getDataSource_byDate(app3=app3, tablename="RDS_ECS_src_bd_SupplierDetail", field="FDate",
-                                    FStartDate=FStartDate)
 
-        pass
+def customerByDate_query(token,FDate):
+    '''
+    客户按日期查询
+    :return:
+    '''
 
-    res = pd.DataFrame(data)
+    app3 = RdClient(token=token)
 
-    return res
+    data = getDataSource_byDate(app3=app3, tablename="RDS_ECS_src_BD_CUSTOMER", field="FDate",
+                                FStartDate=FDate)
+
+    df = pd.DataFrame(data)
+
+    return df
+
+
+def supplierByDate_query(token,FDate):
+    '''
+    供应商按日期查询
+    :return:
+    '''
+
+    app3 = RdClient(token=token)
+
+    data = getDataSource_byDate(app3=app3, tablename="RDS_ECS_src_bd_SupplierDetail", field="FDate",
+                                FStartDate=FDate)
+
+    df = pd.DataFrame(data)
+
+    return df
 
 
 def ERPData_query(api_sdk, option, FNumber, Formid):
@@ -238,44 +340,86 @@ def ERPData_query(api_sdk, option, FNumber, Formid):
         return "单据未存在金蝶系统"
 
 
-def ERPDATA_queryByOrder(token,category, FNumber,FName="赛普集团新账套"):
+def materialErpDataByFNumber_query(token,FNumber,FName="赛普集团新账套"):
     '''
-    按照单据编号查询
-    :param app3:
-    :param category:
-    :param FNumber:
+    物料按编号查询
     :return:
     '''
+
     api_sdk = K3CloudApiSdk()
 
     app3 = RdClient(token=token)
 
-    sql=f"select * from rds_key_values where FName='{FName}'"
+    sql = f"select * from rds_key_values where FName='{FName}'"
 
-    key=app3.select(sql)
+    key = app3.select(sql)
 
     option = {
         "acct_id": key[0]["acct_id"],
         "user_name": key[0]["user_name"],
         "app_id": key[0]["app_id"],
-        # "app_sec": 'd019b038bc3c4b02b962e1756f49e179',
         "app_sec": key[0]["app_sec"],
-        # "server_url": 'http://192.168.1.13/K3Cloud',
         "server_url": key[0]["server_url"],
     }
 
-    if category == '客户':
-        res = ERPData_query(api_sdk=api_sdk, option=option, FNumber=FNumber, Formid="BD_Customer")
+    res = ERPData_query(api_sdk=api_sdk, option=option, FNumber=FNumber, Formid="BD_MATERIAL")
 
-        return res
-    if category == '物料':
-        res = ERPData_query(api_sdk=api_sdk, option=option, FNumber=FNumber, Formid="BD_MATERIAL")
+    return res
 
-        return res
-    if category == '供应商':
-        res = ERPData_query(api_sdk=api_sdk, option=option, FNumber=FNumber, Formid="BD_Supplier")
 
-        return res
+def customerErpDataByFNumber_query(token,FNumber,FName="赛普集团新账套"):
+    '''
+    客户按编号查询
+    :return:
+    '''
+
+    api_sdk = K3CloudApiSdk()
+
+    app3 = RdClient(token=token)
+
+    sql = f"select * from rds_key_values where FName='{FName}'"
+
+    key = app3.select(sql)
+
+    option = {
+        "acct_id": key[0]["acct_id"],
+        "user_name": key[0]["user_name"],
+        "app_id": key[0]["app_id"],
+        "app_sec": key[0]["app_sec"],
+        "server_url": key[0]["server_url"],
+    }
+
+    res = ERPData_query(api_sdk=api_sdk, option=option, FNumber=FNumber, Formid="BD_Customer")
+
+    return res
+
+
+def supplierErpDataByFNumber_query(token,FNumber,FName="赛普集团新账套"):
+    '''
+    供应商按编号查询
+    :return:
+    '''
+
+    api_sdk = K3CloudApiSdk()
+
+    app3 = RdClient(token=token)
+
+    sql = f"select * from rds_key_values where FName='{FName}'"
+
+    key = app3.select(sql)
+
+    option = {
+        "acct_id": key[0]["acct_id"],
+        "user_name": key[0]["user_name"],
+        "app_id": key[0]["app_id"],
+        "app_sec": key[0]["app_sec"],
+        "server_url": key[0]["server_url"],
+    }
+
+    res = ERPData_query(api_sdk=api_sdk, option=option, FNumber=FNumber, Formid="BD_Supplier")
+
+    return res
+
 
 
 def Status_upload(app3, tablename, field, FNumber):
@@ -305,12 +449,9 @@ def deleteData(app3,FTableName,field,FNumber):
 
 
 
-def FBillStatus_upload(token,category, FNumber,FName="赛普集团新账套"):
+def materialStatus_upload(token,FNumber,FName="赛普集团新账套"):
     '''
-    单据状态修改
-    :param app3:
-    :param category:
-    :param FNumber:
+    物料按货号修改
     :return:
     '''
 
@@ -320,58 +461,94 @@ def FBillStatus_upload(token,category, FNumber,FName="赛普集团新账套"):
 
     key = app3.select(sql)
 
-    # app2 = RdClient(token='57DEDF26-5C00-4CA9-BBF7-57ECE07E179B')
+
     app2 = RdClient(token=key[0]["FApp2"])
 
     option = {
         "acct_id": key[0]["acct_id"],
         "user_name": key[0]["user_name"],
         "app_id": key[0]["app_id"],
-        # "app_sec": 'd019b038bc3c4b02b962e1756f49e179',
         "app_sec": key[0]["app_sec"],
-        # "server_url": 'http://192.168.1.13/K3Cloud',
         "server_url": key[0]["server_url"],
     }
 
-    data = ""
+    deleteData(app3=app3, FTableName="RDS_ECS_src_bd_MaterialDetail", field="FNumber", FNumber=FNumber)
 
-    if category == '客户':
+    deleteData(app3=app3, FTableName="RDS_ECS_ods_bd_MaterialDetail", field="FNumber", FNumber=FNumber)
+    l = []
 
-        # 通过客户名称
+    l.append(FNumber)
 
-        deleteData(app3=app3, FTableName="RDS_ECS_src_BD_CUSTOMER", field="FName", FNumber=FNumber)
+    material.performFNumber(app2=app2, app3=app3, option1=option, codeList=l)
 
-        deleteData(app3=app3, FTableName="RDS_ECS_ods_BD_CUSTOMER", field="FName", FNumber=FNumber)
-        l=[]
-        l.append(FNumber)
-
-        customer.CUSTOMERNAME_get_ECS(app2=app2,app3=app3,option1=option,CUSTOMERNAMES=l)
-
-    if category == '物料':
-
-        deleteData(app3=app3, FTableName="RDS_ECS_src_bd_MaterialDetail", field="FNumber", FNumber=FNumber)
-
-        deleteData(app3=app3, FTableName="RDS_ECS_ods_bd_MaterialDetail", field="FNumber", FNumber=FNumber)
-        l = []
-
-        l.append(FNumber)
-
-        material.performFNumber(app2=app2,app3=app3,option1=option,codeList=l)
+    return "修改成功"
 
 
-    if category == '供应商':
+def customerStatus_upload(token,FNumber,FName="赛普集团新账套"):
+    '''
+    客户按名称修改
+    :return:
+    '''
 
-        deleteData(app3=app3, FTableName="RDS_ECS_src_bd_SupplierDetail", field="FName", FNumber=FNumber)
+    app3 = RdClient(token=token)
 
-        deleteData(app3=app3, FTableName="RDS_ECS_ods_bd_SupplierDetail", field="FName", FNumber=FNumber)
-        l = []
+    sql = f"select * from rds_key_values where FName='{FName}'"
 
-        l.append(FNumber)
+    key = app3.select(sql)
 
-        supplier.FNAME_get_supplier(app2=app2,app3=app3,option1=option,fname_list=l)
+    app2 = RdClient(token=key[0]["FApp2"])
+
+    option = {
+        "acct_id": key[0]["acct_id"],
+        "user_name": key[0]["user_name"],
+        "app_id": key[0]["app_id"],
+        "app_sec": key[0]["app_sec"],
+        "server_url": key[0]["server_url"],
+    }
+
+    deleteData(app3=app3, FTableName="RDS_ECS_src_BD_CUSTOMER", field="FName", FNumber=FNumber)
+
+    deleteData(app3=app3, FTableName="RDS_ECS_ods_BD_CUSTOMER", field="FName", FNumber=FNumber)
+    l = []
+    l.append(FNumber)
+
+    customer.CUSTOMERNAME_get_ECS(app2=app2, app3=app3, option1=option, CUSTOMERNAMES=l)
+
+    return "修改成功"
 
 
-    return data
+def supplierStatus_upload(token,FNumber,FName="赛普集团新账套"):
+    '''
+    供应商按名称修改
+    :return:
+    '''
+
+    app3 = RdClient(token=token)
+
+    sql = f"select * from rds_key_values where FName='{FName}'"
+
+    key = app3.select(sql)
+
+    app2 = RdClient(token=key[0]["FApp2"])
+
+    option = {
+        "acct_id": key[0]["acct_id"],
+        "user_name": key[0]["user_name"],
+        "app_id": key[0]["app_id"],
+        "app_sec": key[0]["app_sec"],
+        "server_url": key[0]["server_url"],
+    }
+
+    deleteData(app3=app3, FTableName="RDS_ECS_src_bd_SupplierDetail", field="FName", FNumber=FNumber)
+
+    deleteData(app3=app3, FTableName="RDS_ECS_ods_bd_SupplierDetail", field="FName", FNumber=FNumber)
+    l = []
+
+    l.append(FNumber)
+
+    supplier.FNAME_get_supplier(app2=app2, app3=app3, option1=option, fname_list=l)
+
+    return "修改成功"
 
 
 def log_query(token,FNumber):
