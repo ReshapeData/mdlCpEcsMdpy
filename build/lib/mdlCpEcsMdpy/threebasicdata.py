@@ -1,12 +1,9 @@
 import pymssql
-
-
+from pyrda.dbms.rds import RdClient
 class NOAccount():
     def __init__(self):
         # 连接数据库
-        self.new_con = pymssql.connect(host='115.159.201.178', port='1433', user='rdsxt', password='rds@2022',
-                                       database='cprds', charset='utf8')
-        self.new_cursor = self.new_con.cursor()
+        self.app3 = RdClient(token='9B6F803F-9D37-41A2-BDA0-70A7179AF0F3')
 
     def update_RDS_ECS_ODS_BD_CUSTOMER(self):
         """
@@ -60,9 +57,9 @@ class NOAccount():
                                       ( SELECT  FNumber FROM RDS_ECS_ODS_BD_CUSTOMER )
                            """
 
-
-        self.new_cursor.execute(insert_into_RDS_ECS_ODS_BD_CUSTOMER_sql)
-        res = self.new_con.commit()
+        res=self.app3.update(insert_into_RDS_ECS_ODS_BD_CUSTOMER_sql)
+        # self.new_cursor.execute(insert_into_RDS_ECS_ODS_BD_CUSTOMER_sql)
+        # res = self.new_con.commit()
         return res
 
     def update_RDS_ECS_ODS_bd_MaterialDetail(self):
@@ -150,8 +147,10 @@ class NOAccount():
                             where  A.[FInterId] =B.[FInterId]
                             AND A.[FNumber]= B.[FNumber])
                 """
-        self.new_cursor.execute(insert_into_RDS_ECS_ODS_bd_MaterialDetail_sql)
-        res = self.new_con.commit()
+
+        res = self.app3.update(insert_into_RDS_ECS_ODS_bd_MaterialDetail_sql)
+        # self.new_cursor.execute(insert_into_RDS_ECS_ODS_bd_MaterialDetail_sql)
+        # res = self.new_con.commit()
         return res
 
     def update_RDS_ECS_ODS_bd_SupplierDetail(self):
@@ -206,8 +205,10 @@ class NOAccount():
 
 
                 """
-        self.new_cursor.execute(insert_into_RDS_ECS_ODS_bd_SupplierDetail_sql)
-        res = self.new_con.commit()
+
+        res = self.app3.update(insert_into_RDS_ECS_ODS_bd_SupplierDetail_sql)
+        # self.new_cursor.execute(insert_into_RDS_ECS_ODS_bd_SupplierDetail_sql)
+        # res = self.new_con.commit()
         return res
 
 # if __name__ == '__main__':

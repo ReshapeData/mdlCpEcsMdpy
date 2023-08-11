@@ -59,6 +59,12 @@ def insert_log(app2, res, FNumber, cp='赛普'):
     app2.insert(sql)
 
 
+def insert_log2(app2, res, FNumber, cp='赛普'):
+
+    sql = f"""insert into RDS_ECS_Log(FProgramName,FNumber,FMessage,FOccurrenceTime,FCompanyName) values('ECS客户','{FNumber}','{res}',getdate(),'{cp}')"""
+    app2.insert(sql)
+
+
 # 修改Fisdo状态
 def changeStatus(app2, status, tableName, param, param2):
     '''
@@ -273,33 +279,28 @@ def ECS_post_info(url, pageNum, pageSize, qw, tableName, updateTime, key):
     :return: dataframe
     '''
 
-    try:
+    queryList = '[{"qw":' + f'"{qw}"' + ',"value":' + f'"{updateTime}"' + ',"key":' + f'"{key}"' + '}]'
+    # 查询条件
+    queryList1 = [{"qw": qw, "value": updateTime, "key": key}]
+    # 查询的表名
+    tableName = tableName
+    data = {
+        "tableName": tableName,
+        "pageNum": pageNum,
+        "pageSize": pageSize,
+        "token": encryption(pageNum, pageSize, queryList, tableName),
+        "queryList": queryList1
+    }
+    data = json.dumps(data)
+    headers = {
+        'Content-Type': 'application/json',
+    }
+    response = requests.post(url, headers=headers, data=data)
+    info = response.json()
+    df = pd.DataFrame(info['data']['list'])
 
-        queryList = '[{"qw":' + f'"{qw}"' + ',"value":' + f'"{updateTime}"' + ',"key":' + f'"{key}"' + '}]'
-        # 查询条件
-        queryList1 = [{"qw": qw, "value": updateTime, "key": key}]
-        # 查询的表名
-        tableName = tableName
-        data = {
-            "tableName": tableName,
-            "pageNum": pageNum,
-            "pageSize": pageSize,
-            "token": encryption(pageNum, pageSize, queryList, tableName),
-            "queryList": queryList1
-        }
-        data = json.dumps(data)
-        headers = {
-            'Content-Type': 'application/json',
-        }
-        response = requests.post(url, headers=headers, data=data)
-        info = response.json()
-        # print(info)
-        df = pd.DataFrame(info['data']['list'])
-        return df
+    return df
 
-    except Exception as e:
-
-        return pd.DataFrame()
 
 
 # 通过开始时间，结束时间请求数据
@@ -354,6 +355,50 @@ def ECS_post_info2(url, pageNum, pageSize, qw, qw2, tableName, updateTime, updat
     except Exception as e:
 
         return pd.DataFrame()
+
+
+def ECS_post_info3(url, pageNum, pageSize, qw, tableName, updateTime, key):
+    '''
+    生科云选API接口
+    :param url: 地址
+    :param pageNum: 页码
+    :param pageSize: 页面大小
+    :param qw: 查询条件
+    :param tableName: 表名
+    :param updateTime: 时间戳
+    :return: dataframe
+    '''
+    queryList = '[{"qw":' + f'"{qw}"' + ',"value":' + f'"{updateTime}"' + ',"key":' + f'"{key}"' + '}]'
+    # 查询条件
+    queryList1 = [{"qw": qw, "value": updateTime, "key": key}]
+    # 查询的表名
+    tableName = tableName
+    data = {
+        "tableName": tableName,
+        "pageNum": pageNum,
+        "pageSize": pageSize,
+        "token": encryption(pageNum, pageSize, queryList, tableName),
+        "queryList": queryList1
+    }
+    data = json.dumps(data)
+    headers = {
+        'Content-Type': 'application/json',
+    }
+    response = requests.post(url, headers=headers, data=data)
+    info = response.json()
+
+    info_data = info.get('data')
+    if info_data:
+        data_info_list = info_data.get('list')
+        if info_data.get('list') == None:
+            data_info_list = []
+    else:
+        data_info_list = []
+    # print(data_info_list)
+    return data_info_list
+
+    # df = pd.DataFrame(info['data']['list'])
+    # return df
 
 
 # ECS分表数据整合成SRC.model
@@ -681,7 +726,7 @@ def ERP_customersave(api_sdk, option, dData, app2, app3, src_table_name, ods_tab
                         changeStatus(app3, "1", src_table_name, "FNumber", i['FNumber'])
                         changeStatus(app3, "1", ods_table_name, "FNumber", i['FNumber'])
 
-                        print(result)
+                        insert_log2(app3, "数据同步成功", i['FNumber'])
 
                     else:
                         insert_log(app3, auditres, i['FNumber'])
@@ -788,9 +833,7 @@ def FCREATEDATE_get_ECS(app2,app3,option1,starttime, endtime):
 
     url = "https://kingdee-api.bioyx.cn/dynamic/query"
 
-    # res = ECS_post_info(url, 1, 1000, "ge", "v_customer_info", "2022-10-11", "FCREATEDATE")
-    res = ECS_post_info2(url, 1, 1000, "ge", "le", "v_customer_info", starttime, endtime, "FCREATEDATE")
-    # res.to_excel("D:\\EcsCustomer.xlsx")
+    res = ECS_post_info(url, 1, 1000, "like", "v_customer_info", starttime, "UPDATE_TIME")
 
     if not res.empty:
         for i in res.index:
@@ -816,23 +859,23 @@ def FCREATEDATE_get_ECS(app2,app3,option1,starttime, endtime):
 
             if data['FCOUNTRY'] == '中国' and data['FTAXREGISTERCODE'] == '':
                 ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '纳税登记号为空'}]}}}
-                insert_log(app2, ero, data['FNumber'])
+                insert_log(app3, ero, data['FNumber'])
                 print(f"{data['FName']}纳税登记号为空")
                 continue
             if data['FTRADINGCURRNO'] == '':
                 ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '结算币别为空'}]}}}
-                insert_log(app2, ero, data['FNumber'])
+                insert_log(app3, ero, data['FNumber'])
                 print(f"{data['FName']}结算币别为空")
                 continue
 
             sql = f"""select FName from RDS_ECS_SRC_BD_CUSTOMER"""
-            fdata = app2.select(sql)
+            fdata = app3.select(sql)
             fnames = []
             for name_date in fdata:
                 fnames.append(name_date['FName'])
 
             if data['FName'] not in fnames:
-                insert_data(app2, data)
+                insert_data(app3, data)
                 print(f"{data['FNumber']}插入成功")
             else:
                 print(f"{data['FNumber']}已存在数据库")
@@ -844,65 +887,67 @@ def FCREATEDATE_get_ECS(app2,app3,option1,starttime, endtime):
 
 
 # 名称入口
-def CUSTOMERNAME_get_ECS(app2,app3,option1,CUSTOMERNAMES):
+def CUSTOMERNumber_get_ECS(app2,app3,option1,FNumber):
     # 新账套
 
     url = "https://kingdee-api.bioyx.cn/dynamic/query"
 
-    for i in CUSTOMERNAMES:
+    data_info = ECS_post_info(url, 1, 1000, "eq", "v_customer_info", FNumber, "CUSTOMER_SEQ")
 
-        data_info = ECS_post_info(url, 1, 1000, "eq", "v_customer_info", i, "CUSTOMERNAME")
+    if not data_info.empty:
+        data_info = data_info.loc[0]
 
-        if not data_info.empty:
-            data_info = data_info.loc[0]
+        data_address = ECS_post_info(url, 1, 1000, "eq", "v_customer_address", data_info['CUSTOMER_SEQ'],
+                                     "CUSTOMER_SEQ")
 
-            data_address = ECS_post_info(url, 1, 1000, "eq", "v_customer_address", data_info['CUSTOMER_SEQ'],
-                                         "CUSTOMER_SEQ")
+        data_contact = ECS_post_info(url, 1, 1000, "eq", "v_customer_contact", data_info['CUSTOMER_SEQ'],
+                                     "CUSTOMER_SEQ")
 
-            data_contact = ECS_post_info(url, 1, 1000, "eq", "v_customer_contact", data_info['CUSTOMER_SEQ'],
-                                         "CUSTOMER_SEQ")
-
-            if data_address.empty:
-                data_address = {}
-            else:
-                data_address = data_address.loc[0]
-
-            if data_contact.empty:
-                data_contact = {}
-            else:
-                data_contact = data_contact.loc[0]
-
-            data = combination(data_info, data_address, data_contact)
-
-            # 判断纳税登记号是否为空
-            if data['FCOUNTRY'] == '中国' and data['FTAXREGISTERCODE'] == '':
-                ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '纳税登记号为空'}]}}}
-                insert_log(app3, ero, data['FNumber'])
-                print(f"{data['FName']}纳税登记号为空")
-                continue
-            if data['FTRADINGCURRNO'] == '':
-                ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '结算币别为空'}]}}}
-                insert_log(app3, ero, data['FNumber'])
-                print(f"{data['FName']}结算币别为空")
-                continue
-
-            # 查重
-            sql = f"""select FName from RDS_ECS_SRC_BD_CUSTOMER"""
-            fdata = app3.select(sql)
-            fnames = []
-            for name_date in fdata:
-                fnames.append(name_date['FName'])
-
-            # 插入
-            if data['FName'] not in fnames:
-                insert_data(app3, data)
-                acc = NOAccount()
-                acc.update_RDS_ECS_ODS_BD_CUSTOMER()
-                print(f"{data['FNumber']}插入成功")
-            else:
-                print(f"{data['FNumber']}已存在数据库")
+        if data_address.empty:
+            data_address = {}
         else:
-            print(f"{i}未请求到数据")
+            data_address = data_address.loc[0]
+
+        if data_contact.empty:
+            data_contact = {}
+        else:
+            data_contact = data_contact.loc[0]
+
+        data = combination(data_info, data_address, data_contact)
+
+        # 判断纳税登记号是否为空
+        if data['FCOUNTRY'] == '中国' and data['FTAXREGISTERCODE'] == '':
+            ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '纳税登记号为空'}]}}}
+            insert_log(app3, ero, data['FNumber'])
+            print(f"{data['FName']}纳税登记号为空")
+
+        if data['FTRADINGCURRNO'] == '':
+            ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '结算币别为空'}]}}}
+            insert_log(app3, ero, data['FNumber'])
+            print(f"{data['FName']}结算币别为空")
+
+
+        # 查重
+        sql = f"""select FName from RDS_ECS_SRC_BD_CUSTOMER"""
+        fdata = app3.select(sql)
+        fnames = []
+        for name_date in fdata:
+            fnames.append(name_date['FName'])
+
+        # 插入
+        if data['FName'] not in fnames:
+            insert_data(app3, data)
+            acc = NOAccount()
+            acc.update_RDS_ECS_ODS_BD_CUSTOMER()
+            print(f"{data['FNumber']}插入成功")
+        else:
+
+            print(f"{data['FNumber']}已存在数据库")
+            insert_log2(app3, f"{data['FNumber']}已存在数据库", data['FNumber'])
+    else:
+        print(f"{FNumber}未请求到数据")
+
+        insert_log2(app3, f"{FNumber}未请求到数据", FNumber)
     # 写入金蝶
     ecs_ods_erp(app2, app3, option1)
 

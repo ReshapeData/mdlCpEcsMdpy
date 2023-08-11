@@ -291,6 +291,14 @@ def insert_log(app2, res, FNumber, cp='赛普'):
 
     app2.insert(sql)
 
+def insert_log2(app2, res, FNumber, cp='赛普'):
+
+    sql = f"""insert into RDS_ECS_Log(FProgramName,FNumber,FMessage,FOccurrenceTime,FCompanyName) 
+
+    values('ECS物料','{FNumber}','{res}',getdate(),'{cp}')"""
+
+    app2.insert(sql)
+
 
 # 编码请求ECS数据，插入SRC
 def ecsToDmsByFNumber(app3, codeList):
@@ -345,7 +353,8 @@ def ecsToDmsByFNumber(app3, codeList):
 
                 else:
 
-                    print(f"{data_info_list['FNumber']}已存在src")
+                    insert_log2(app3, f"{data_info_list['FNumber']}已存在src", data['FNumber'])
+
 
 
 # 日期请求ECS数据，插入SRC
@@ -437,7 +446,7 @@ def getOdsData(app3):
         FIsEnableMaxStock,FMaxStock,F_SZSP_Itemnumber,FBaseProperty,FSupplierMaterialCode,FMaterialGroupName,FMaterialGroupCode,FParentMaterialGroupCode,FParentMaterialGroupName from RDS_ECS_ODS_bd_MaterialDetail where FIsdo=0"""
 
     res = app3.select(sql)
-    print(res)
+
     return res
 
 
@@ -1242,7 +1251,6 @@ def action(i, app2, api_sdk, app3):
 
             savedResultInformation = api_sdk.Save("BD_MATERIAL", model)
             sri = json.loads(savedResultInformation)
-            print(sri)
 
             if sri['Result']['ResponseStatus']['IsSuccess']:
 
@@ -1273,25 +1281,24 @@ def action(i, app2, api_sdk, app3):
                         changeStatus(app3, "1", "RDS_ECS_ODS_bd_MaterialDetail", "FNumber", i['FNumber'])
                         changeStatus(app3, "1", "RDS_ECS_SRC_bd_MaterialDetail", "FNumber", i['FNumber'])
 
+                        insert_log2(app3, "数据同步成功", i['FNumber'])
+
 
 
                     else:
                         insert_log(app3, auditres, i['FNumber'])
                         changeStatus(app3, "2", "RDS_ECS_ODS_bd_MaterialDetail", "FNumber", i['FNumber'])
                         changeStatus(app3, "2", "RDS_ECS_SRC_bd_MaterialDetail", "FNumber", i['FNumber'])
-                        print(auditres)
                 else:
                     insert_log(app3, subri, i['FNumber'])
                     changeStatus(app3, "2", "RDS_ECS_ODS_bd_MaterialDetail", "FNumber", i['FNumber'])
                     changeStatus(app2, "2", "RDS_ECS_SRC_bd_MaterialDetail", "FNumber", i['FNumber'])
-                    print(subri)
             else:
                 insert_log(app3, sri, i['FNumber'])
                 changeStatus(app3, "2", "RDS_ECS_ODS_bd_MaterialDetail", "FNumber", i['FNumber'])
                 changeStatus(app3, "2", "RDS_ECS_SRC_bd_MaterialDetail", "FNumber", i['FNumber'])
                 print(sri)
     else:
-        print(f"{i['FNumber']}查无此分组")
         changeStatus(app3, "2", "RDS_ECS_ODS_bd_MaterialDetail", "FNumber", i['FNumber'])
         changeStatus(app3, "2", "RDS_ECS_SRC_bd_MaterialDetail", "FNumber", i['FNumber'])
 
@@ -1314,7 +1321,53 @@ def performFNumber(app2,app3,option1,codeList):
     print("运行结束")
 
 
-#     ecsToDmsByFDate
+def byFNumber_sync(app2,app3,option,codeList):
+
+    if type(codeList) == list:
+
+        ecsToDmsByFNumber(app3, codeList)
+
+    else:
+
+        print("codeList不是一个列表")
+
+    odsResult = getOdsDataByFNumber(app3=app3,FNumber=codeList[0])
+
+    api_sdk = K3CloudApiSdk()
+
+    if odsResult:
+
+        erp_save(app2=app2, app3=app3, option=option, api_sdk=api_sdk, data=odsResult)
+
+        pass
+
+    else:
+
+        return "没有数据需要同步"
+
+
+def getOdsDataByFNumber(app3,FNumber):
+    '''
+    通过单据编号获得数据源
+    :param app3:
+    :return:
+    '''
+
+    sql = f"""select FDeptId,FUserId,FApplyOrgName,FVarDateTime,FNumber,FName,FSpecification,
+            FDescription,FTaxRateId,FGROSSWEIGHT,FNETWEIGHT,FLENGTH,FWIDTH,FHEIGHT,FVOLUME,FSafeStock,FMinPackCount,
+            FPlanningStrategy,FOrderPolicy,FFixLeadTime,FFixLeadTimeType,FVarLeadTime,FVarLeadTimeType,FOrderIntervalTimeType,
+            FOrderIntervalTime,FMaxPOQty,FMinPOQty,FIncreaseQty,FEOQ,FVarLeadTimeLotSize,FFinishReceiptOverRate,
+            FFinishReceiptShortRate,FMinIssueQty,F_SZSP_CheckBox,FISMinIssueQty,FIsBatchManage,FOverControlMode,FIsKFPeriod,
+            FCheckOut,FMaterialGroup,FErpClsID,FCategoryID,FTaxCategoryCodeId,FWEIGHTUNITID,FBaseUnitId,FVOLUMEUNITID,
+            FBatchRuleID,F_SZSP_Assistant,FUploadDate,Fisdo,FChecker,FOldNumber,FIsPurchase,F_SZSP_Decimal,F_SZSP_Decimal1,
+            F_SZSP_SKUnumber,F_SZSP_PackCoefficient,FExpUnit,FExpPeriod,FIsEnableSafeStock,FIsEnableMinStock,FMinStock,
+            FIsEnableMaxStock,FMaxStock,F_SZSP_Itemnumber,FBaseProperty,FSupplierMaterialCode,FMaterialGroupName,FMaterialGroupCode,FParentMaterialGroupCode,FParentMaterialGroupName from RDS_ECS_ODS_bd_MaterialDetail where FNumber='{FNumber}'"""
+
+    res = app3.select(sql)
+
+    return res
+
+
 
 def performFNumber_bydate(app2,app3,option1,FDate):
 

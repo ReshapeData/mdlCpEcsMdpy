@@ -9,7 +9,7 @@ from setuptools import find_packages
 
 setup(
     name  ='mdlCpEcsMdpy',
-    version = '1.2.0',
+    version = '1.2.2',
     install_requires=[
         'requests',
     ],

@@ -34,15 +34,17 @@ def materialByFNumber_sync(token,FNumber,FName="赛普集团新账套"):
     l = []
     l.append(FNumber)
 
-    data = material.performFNumber(app2=app2, app3=app3, option1=option, codeList=l)
+    data =material.byFNumber_sync(app2=app2, app3=app3, option=option, codeList=l)
+
+    # data = material.performFNumber(app2=app2, app3=app3, option1=option, codeList=l)
 
     return data
 
 
-def customerByFName_sync(token,FCustomerName,FName="赛普集团新账套"):
+def customerByFNumber_sync(token,FNumber,FName="赛普集团新账套"):
 
     '''
-    客户按名称同步
+    客户按编号同步
     :return:
     '''
 
@@ -62,18 +64,14 @@ def customerByFName_sync(token,FCustomerName,FName="赛普集团新账套"):
         "server_url": key[0]["server_url"],
     }
 
-    # 客户的名称
-    l = []
 
-    l.append(FCustomerName)
-
-    data = customer.CUSTOMERNAME_get_ECS(app2=app2, app3=app3, option1=option, CUSTOMERNAMES=l)
+    data = customer.CUSTOMERNumber_get_ECS(app2=app2, app3=app3, option1=option, FNumber=FNumber)
 
     return data
 
 
 
-def supplierByFName_sync(token,FSupplierName,FName="赛普集团新账套"):
+def supplierByFNumber_sync(token,FNumber,FName="赛普集团新账套"):
 
     '''
     供应商按名称同步
@@ -97,10 +95,8 @@ def supplierByFName_sync(token,FSupplierName,FName="赛普集团新账套"):
     }
 
     # 列表格式
-    l = []
-    l.append(FSupplierName)
 
-    data = supplier.FNAME_get_supplier(app2=app2, app3=app3, option1=option, fname_list=l)
+    data = supplier.FNumber_get_supplier(app2=app2, app3=app3, option1=option, FNumber=FNumber)
 
     return data
 
@@ -156,6 +152,7 @@ def customerByDate_sync(token,FDate,FName="赛普集团新账套"):
         "server_url": key[0]["server_url"],
     }
 
+
     data = customer.FCREATEDATE_get_ECS(app2=app2, app3=app3, option1=option, starttime=FDate, endtime=FDate)
 
     return data
@@ -185,7 +182,7 @@ def supplierByDate_sync(token,FDate,FName="赛普集团新账套"):
         "server_url": key[0]["server_url"],
     }
 
-    data=supplier.FNAME_get_supplier_bydate(app2=app2,app3=app3,option1=option,Fdate=FDate)
+    data=supplier.FDate_get_supplier_bydate(app2=app2,app3=app3,option1=option,Fdate=FDate)
 
     return data
 
@@ -260,7 +257,7 @@ def getDataSource_byDate(app3, tablename, field, FStartDate):
     :param FNumber:
     :return:
     '''
-    sql = f"""select * from {tablename} where {field} like '{FStartDate}'"""
+    sql = f"""select * from {tablename} where CONVERT(date,{field},20) = '{FStartDate}'"""
 
     res = app3.select(sql)
 
@@ -439,10 +436,10 @@ def Status_upload(app3, tablename, field, FNumber):
     return "单据状态修改已完成"
 
 
-def deleteData(app3,FTableName,field,FNumber):
+def dataStatus_update(app3,FTableName,field,FNumber):
 
     sql=f"""
-    delete from {FTableName} where {field}='{FNumber}'
+    update a set a.FIsdo=0 from {FTableName} a where a.{field}='{FNumber}'
     """
 
     app3.update(sql)
@@ -457,29 +454,7 @@ def materialStatus_upload(token,FNumber,FName="赛普集团新账套"):
 
     app3 = RdClient(token=token)
 
-    sql = f"select * from rds_key_values where FName='{FName}'"
-
-    key = app3.select(sql)
-
-
-    app2 = RdClient(token=key[0]["FApp2"])
-
-    option = {
-        "acct_id": key[0]["acct_id"],
-        "user_name": key[0]["user_name"],
-        "app_id": key[0]["app_id"],
-        "app_sec": key[0]["app_sec"],
-        "server_url": key[0]["server_url"],
-    }
-
-    deleteData(app3=app3, FTableName="RDS_ECS_src_bd_MaterialDetail", field="FNumber", FNumber=FNumber)
-
-    deleteData(app3=app3, FTableName="RDS_ECS_ods_bd_MaterialDetail", field="FNumber", FNumber=FNumber)
-    l = []
-
-    l.append(FNumber)
-
-    material.performFNumber(app2=app2, app3=app3, option1=option, codeList=l)
+    dataStatus_update(app3=app3, FTableName="RDS_ECS_ods_bd_MaterialDetail", field="FNumber", FNumber=FNumber)
 
     return "修改成功"
 
@@ -492,27 +467,7 @@ def customerStatus_upload(token,FNumber,FName="赛普集团新账套"):
 
     app3 = RdClient(token=token)
 
-    sql = f"select * from rds_key_values where FName='{FName}'"
-
-    key = app3.select(sql)
-
-    app2 = RdClient(token=key[0]["FApp2"])
-
-    option = {
-        "acct_id": key[0]["acct_id"],
-        "user_name": key[0]["user_name"],
-        "app_id": key[0]["app_id"],
-        "app_sec": key[0]["app_sec"],
-        "server_url": key[0]["server_url"],
-    }
-
-    deleteData(app3=app3, FTableName="RDS_ECS_src_BD_CUSTOMER", field="FName", FNumber=FNumber)
-
-    deleteData(app3=app3, FTableName="RDS_ECS_ods_BD_CUSTOMER", field="FName", FNumber=FNumber)
-    l = []
-    l.append(FNumber)
-
-    customer.CUSTOMERNAME_get_ECS(app2=app2, app3=app3, option1=option, CUSTOMERNAMES=l)
+    dataStatus_update(app3=app3, FTableName="RDS_ECS_ods_BD_CUSTOMER", field="FNumber", FNumber=FNumber)
 
     return "修改成功"
 
@@ -525,42 +480,56 @@ def supplierStatus_upload(token,FNumber,FName="赛普集团新账套"):
 
     app3 = RdClient(token=token)
 
-    sql = f"select * from rds_key_values where FName='{FName}'"
-
-    key = app3.select(sql)
-
-    app2 = RdClient(token=key[0]["FApp2"])
-
-    option = {
-        "acct_id": key[0]["acct_id"],
-        "user_name": key[0]["user_name"],
-        "app_id": key[0]["app_id"],
-        "app_sec": key[0]["app_sec"],
-        "server_url": key[0]["server_url"],
-    }
-
-    deleteData(app3=app3, FTableName="RDS_ECS_src_bd_SupplierDetail", field="FName", FNumber=FNumber)
-
-    deleteData(app3=app3, FTableName="RDS_ECS_ods_bd_SupplierDetail", field="FName", FNumber=FNumber)
-    l = []
-
-    l.append(FNumber)
-
-    supplier.FNAME_get_supplier(app2=app2, app3=app3, option1=option, fname_list=l)
+    dataStatus_update(app3=app3, FTableName="RDS_ECS_ods_bd_SupplierDetail", field="FNumber", FNumber=FNumber)
 
     return "修改成功"
 
 
-def log_query(token,FNumber):
+def materialLog_query(token,FNumber):
     '''
-    日志查询
+    物料日志查询
     :param app3:
     :param FNumber:
     :return:
     '''
     app3 = RdClient(token=token)
 
-    sql=f"""select * from RDS_ECS_Log where FNUMBER='{FNumber}'"""
+    sql=f"""select * from RDS_ECS_Log where FNUMBER='{FNumber}' and FProgramName='ECS物料'"""
+
+    res=app3.select(sql)
+
+    df=pd.DataFrame(res)
+
+    return df
+
+
+def customerLog_query(token,FNumber):
+    '''
+    客户日志查询
+    :param app3:
+    :param FNumber:
+    :return:
+    '''
+    app3 = RdClient(token=token)
+
+    sql=f"""select * from RDS_ECS_Log where FNUMBER='{FNumber}' and FProgramName='ECS客户'"""
+
+    res=app3.select(sql)
+
+    df=pd.DataFrame(res)
+
+    return df
+
+def supplierLog_query(token,FNumber):
+    '''
+    供应商日志查询
+    :param app3:
+    :param FNumber:
+    :return:
+    '''
+    app3 = RdClient(token=token)
+
+    sql=f"""select * from RDS_ECS_Log where FNUMBER='{FNumber}' and FProgramName='ECS供应商'"""
 
     res=app3.select(sql)
 
