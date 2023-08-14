@@ -293,6 +293,12 @@ def insert_log(app2, res, FNumber, cp='赛普'):
     app2.insert(sql)
 
 
+def insert_log2(app2, res, FNumber, cp='赛普'):
+    sql = f"""insert into RDS_ECS_Log(FProgramName,FNumber,FMessage,FOccurrenceTime,FCompanyName) 
+    values('ECS供应商','{FNumber}','{res}',getdate(),'{cp}')"""
+    app2.insert(sql)
+
+
 # 转换税率编码
 def getTaxRateCode(app2, param):
     '''
@@ -750,7 +756,7 @@ def ERP_suppliersave(api_sdk, option, dData, app2, app3):
 
                         changeStatus(app3, "1", "RDS_ECS_ODS_bd_SupplierDetail", "FNumber", i['FNumber'])
                         changeStatus(app3, "1", "RDS_ECS_SRC_bd_SupplierDetail", "FNumber", i['FNumber'])
-                        print(r)
+                        insert_log2(app3, "数据同步成功", i['FNumber'])
                     else:
                         insert_log(app3, ra, i['FNumber'])
                         changeStatus(app3, "2", "RDS_ECS_ODS_bd_SupplierDetail", "FNumber", i['FNumber'])
@@ -935,75 +941,13 @@ def SaveAfterAllocation(api_sdk, i, app2, FNumber104, app3):
             insert_log(app3, res, FNumber104)
 
 
-# 名称入口
-def FNAME_get_supplier(app2, app3, option1, fname_list):
+
+def FNumber_get_supplier(app2, app3, option1, FNumber):
     # 新账套
 
     url = "https://kingdee-api.bioyx.cn/dynamic/query"
 
-    for FNAME in fname_list:
-        data_info_list = ECS_post_info(url, 1, 1000, "eq", "v_supplier", FNAME, "FNAME")
-
-        if data_info_list:
-            for i in range(len(data_info_list)):
-
-                data_bank = ECS_post_info(url, 1, 1000, "eq", "v_supplier_bank_property", data_info_list[i]['FNUMBER'],
-                                          "FNUMBER")
-
-                data_base = ECS_post_info(url, 1, 1000, "eq", "v_supplier_base_property", data_info_list[i]['FNUMBER'],
-                                          "FNUMBER")
-
-                data_contact = ECS_post_info(url, 1, 1000, "eq", "v_supplier_contact", data_info_list[i]['FNUMBER'],
-                                             "FNUMBER")
-
-                data_business = ECS_post_info(url, 1, 1000, "eq", "v_supplier_business_property",
-                                              data_info_list[i]['FNUMBER'],
-                                              "FNUMBER")
-                if len(data_bank) == 0:
-                    data_bank = [{}]
-                if len(data_base) == 0:
-                    data_base = [{}]
-                if len(data_contact) == 0:
-                    data_contact = [{}]
-                if len(data_business) == 0:
-                    data_business = [{}]
-
-                data = combination(data_info_list[i], data_bank[0], data_base[0], data_contact[0], data_business[0])
-
-                if data['FUniversalCode'] == '':
-                    ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '纳税登记号为空'}]}}}
-                    insert_log(app2, ero, data['FNumber'])
-                    print(f"{data['FName']}纳税登记号为空")
-                    continue
-
-                sql = f"""select FName from RDS_ECS_SRC_bd_SupplierDetail"""
-                res = app2.select(sql)
-                fnames = []
-                for name_date in res:
-                    fnames.append(name_date['FName'])
-
-                if data['FName'] not in fnames:
-                    insert_data(app2, data)
-
-                    acc = NOAccount()
-                    acc.update_RDS_ECS_ODS_bd_SupplierDetail()
-
-                    print(f"{data_info_list[i]['FNUMBER']}插入成功")
-                else:
-                    print(f"{data_info_list[i]['FNUMBER']}已存在数据库")
-        else:
-            print(f"{FNAME}请求数据为空")
-
-    # 写入金蝶
-    judgeDetailData(option1, app2,app3)
-
-
-def FNAME_get_supplier_bydate(app2, app3, option1, Fdate):
-    # 新账套
-
-    url = "https://kingdee-api.bioyx.cn/dynamic/query"
-
-    data_info_list = ECS_post_info(url, 1, 1000, "eq", "v_supplier", Fdate, "UPDATETIME")
+    data_info_list = ECS_post_info(url, 1, 1000, "eq", "v_supplier", FNumber, "FNUMBER")
 
     if data_info_list:
         for i in range(len(data_info_list)):
@@ -1035,16 +979,82 @@ def FNAME_get_supplier_bydate(app2, app3, option1, Fdate):
                 ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '纳税登记号为空'}]}}}
                 insert_log(app2, ero, data['FNumber'])
                 print(f"{data['FName']}纳税登记号为空")
+
+
+            sql = f"""select FNumber from RDS_ECS_SRC_bd_SupplierDetail"""
+            res = app3.select(sql)
+            FNumbers = []
+            for name_date in res:
+                FNumbers.append(name_date['FNumber'])
+
+            if data['FNumber'] not in FNumbers:
+                insert_data(app3, data)
+
+                acc = NOAccount()
+                acc.update_RDS_ECS_ODS_bd_SupplierDetail()
+
+                print(f"{data_info_list[i]['FNUMBER']}插入成功")
+            else:
+
+                insert_log2(app3, f"{data_info_list[i]['FNUMBER']}已存在数据库", data['FNumber'])
+
+                print(f"{data_info_list[i]['FNUMBER']}已存在数据库")
+    else:
+
+        insert_log2(app3, f"{FNumber}请求数据为空", FNumber)
+
+
+    # 写入金蝶
+    judgeDetailData(option1, app2=app2,app3=app3)
+
+
+def FDate_get_supplier_bydate(app2, app3, option1, Fdate):
+    # 新账套
+
+    url = "https://kingdee-api.bioyx.cn/dynamic/query"
+
+    data_info_list = ECS_post_info(url, 1, 1000, "like", "v_supplier", Fdate, "UPDATETIME")
+
+    if data_info_list:
+        for i in range(len(data_info_list)):
+
+            data_bank = ECS_post_info(url, 1, 1000, "eq", "v_supplier_bank_property", data_info_list[i]['FNUMBER'],
+                                      "FNUMBER")
+
+            data_base = ECS_post_info(url, 1, 1000, "eq", "v_supplier_base_property", data_info_list[i]['FNUMBER'],
+                                      "FNUMBER")
+
+            data_contact = ECS_post_info(url, 1, 1000, "eq", "v_supplier_contact", data_info_list[i]['FNUMBER'],
+                                         "FNUMBER")
+
+            data_business = ECS_post_info(url, 1, 1000, "eq", "v_supplier_business_property",
+                                          data_info_list[i]['FNUMBER'],
+                                          "FNUMBER")
+            if len(data_bank) == 0:
+                data_bank = [{}]
+            if len(data_base) == 0:
+                data_base = [{}]
+            if len(data_contact) == 0:
+                data_contact = [{}]
+            if len(data_business) == 0:
+                data_business = [{}]
+
+            data = combination(data_info_list[i], data_bank[0], data_base[0], data_contact[0], data_business[0])
+
+            if data['FUniversalCode'] == '':
+                ero = {'Result': {'ResponseStatus': {'Errors': [{'Message': '纳税登记号为空'}]}}}
+                insert_log(app3, ero, data['FNumber'])
+                print(f"{data['FName']}纳税登记号为空")
                 continue
 
             sql = f"""select FName from RDS_ECS_SRC_bd_SupplierDetail"""
-            res = app2.select(sql)
+            res = app3.select(sql)
             fnames = []
             for name_date in res:
                 fnames.append(name_date['FName'])
 
             if data['FName'] not in fnames:
-                insert_data(app2, data)
+                insert_data(app3, data)
 
                 acc = NOAccount()
                 acc.update_RDS_ECS_ODS_bd_SupplierDetail()
