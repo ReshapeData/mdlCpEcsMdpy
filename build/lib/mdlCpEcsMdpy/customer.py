@@ -7,9 +7,9 @@ import hashlib
 import time
 import json
 
-
 # sql插入语句
-from pyecsbill.threebasicdata import NOAccount
+from .threebasicdata import *
+# from pyecsbill.threebasicdata import NOAccount
 
 
 def insertData(app2, sql):
@@ -875,7 +875,10 @@ def FCREATEDATE_get_ECS(app2,app3,option1,starttime, endtime):
                 fnames.append(name_date['FName'])
 
             if data['FName'] not in fnames:
+
                 insert_data(app3, data)
+                NOAccount(FToken="9B6F803F-9D37-41A2-BDA0-70A7179AF0F3")
+
                 print(f"{data['FNumber']}插入成功")
             else:
                 print(f"{data['FNumber']}已存在数据库")
@@ -937,8 +940,9 @@ def CUSTOMERNumber_get_ECS(app2,app3,option1,FNumber):
         # 插入
         if data['FName'] not in fnames:
             insert_data(app3, data)
-            acc = NOAccount()
-            acc.update_RDS_ECS_ODS_BD_CUSTOMER()
+            NOAccount(FToken="9B6F803F-9D37-41A2-BDA0-70A7179AF0F3")
+            # acc = NOAccount(FToken="9B6F803F-9D37-41A2-BDA0-70A7179AF0F3")
+            # acc.update_RDS_ECS_ODS_BD_CUSTOMER()
             print(f"{data['FNumber']}插入成功")
         else:
 

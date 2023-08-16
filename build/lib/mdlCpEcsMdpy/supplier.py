@@ -5,7 +5,8 @@ import requests
 import hashlib
 import time
 import json
-from mdlCpEcsMdpy.threebasicdata import NOAccount
+from .threebasicdata import *
+# from mdlCpEcsMdpy.threebasicdata import NOAccount
 
 
 def getFinterId(app2, tableName):
@@ -260,6 +261,7 @@ def judgeDetailData(option, app2, app3):
     res = app3.select(sql)
     print(res)
     if res != []:
+
         insert_into_ERP(option=option, data=res, app2=app2, app3=app3)
     else:
         pass
@@ -990,8 +992,10 @@ def FNumber_get_supplier(app2, app3, option1, FNumber):
             if data['FNumber'] not in FNumbers:
                 insert_data(app3, data)
 
-                acc = NOAccount()
-                acc.update_RDS_ECS_ODS_bd_SupplierDetail()
+                NOAccount(FToken="9B6F803F-9D37-41A2-BDA0-70A7179AF0F3")
+
+                # acc = NOAccount()
+                # acc.update_RDS_ECS_ODS_bd_SupplierDetail()
 
                 print(f"{data_info_list[i]['FNUMBER']}插入成功")
             else:
@@ -1056,8 +1060,10 @@ def FDate_get_supplier_bydate(app2, app3, option1, Fdate):
             if data['FName'] not in fnames:
                 insert_data(app3, data)
 
-                acc = NOAccount()
-                acc.update_RDS_ECS_ODS_bd_SupplierDetail()
+                NOAccount(FToken="9B6F803F-9D37-41A2-BDA0-70A7179AF0F3")
+
+                # acc = NOAccount()
+                # acc.update_RDS_ECS_ODS_bd_SupplierDetail()
 
                 print(f"{data_info_list[i]['FNUMBER']}插入成功")
             else:
