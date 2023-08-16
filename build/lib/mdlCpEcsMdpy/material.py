@@ -5,9 +5,9 @@ import time
 import hashlib
 import requests
 
-
 # ECS的token加密
-from pyecsbill.threebasicdata import NOAccount
+# from pyecsbill.threebasicdata import NOAccount
+from .threebasicdata import *
 
 
 def encryption(pageNum, pageSize, queryList, tableName):
@@ -346,8 +346,10 @@ def ecsToDmsByFNumber(app3, codeList):
 
                     insert_data(app3, data)
 
-                    acc = NOAccount()
-                    acc.update_RDS_ECS_ODS_bd_MaterialDetail()
+                    NOAccount(FToken="9B6F803F-9D37-41A2-BDA0-70A7179AF0F3")
+
+                    # acc = NOAccount()
+                    # acc.update_RDS_ECS_ODS_bd_MaterialDetail()
 
                     print(f"{data_info_list['FNumber']}插入成功")
 
@@ -398,6 +400,8 @@ def ecsToDmsByFDate(app3, date):
             if checkRes:
 
                 insert_data(app3, data)
+
+                NOAccount(FToken="9B6F803F-9D37-41A2-BDA0-70A7179AF0F3")
 
                 print(f"{data_info_list['FNumber']}插入成功")
 
