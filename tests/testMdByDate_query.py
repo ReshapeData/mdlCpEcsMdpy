@@ -12,7 +12,6 @@ res=mdlCpEcsMdpy.customerByDate_query(token="9B6F803F-9D37-41A2-BDA0-70A7179AF0F
 
 print(res)
 
-
 res=mdlCpEcsMdpy.supplierByDate_query(token="9B6F803F-9D37-41A2-BDA0-70A7179AF0F3",FDate="2023-07-04")
 
 print(res)

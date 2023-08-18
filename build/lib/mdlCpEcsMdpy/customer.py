@@ -32,7 +32,12 @@ def getData(app2, sql):
     '''
     result = app2.select(sql)
 
-    return result
+    if result:
+
+        return result
+
+    else:
+        return []
 
 
 # 获取最大FInterId
@@ -278,28 +283,33 @@ def ECS_post_info(url, pageNum, pageSize, qw, tableName, updateTime, key):
     :param updateTime: 时间戳
     :return: dataframe
     '''
+    try:
 
-    queryList = '[{"qw":' + f'"{qw}"' + ',"value":' + f'"{updateTime}"' + ',"key":' + f'"{key}"' + '}]'
-    # 查询条件
-    queryList1 = [{"qw": qw, "value": updateTime, "key": key}]
-    # 查询的表名
-    tableName = tableName
-    data = {
-        "tableName": tableName,
-        "pageNum": pageNum,
-        "pageSize": pageSize,
-        "token": encryption(pageNum, pageSize, queryList, tableName),
-        "queryList": queryList1
-    }
-    data = json.dumps(data)
-    headers = {
-        'Content-Type': 'application/json',
-    }
-    response = requests.post(url, headers=headers, data=data)
-    info = response.json()
-    df = pd.DataFrame(info['data']['list'])
+        queryList = '[{"qw":' + f'"{qw}"' + ',"value":' + f'"{updateTime}"' + ',"key":' + f'"{key}"' + '}]'
+        # 查询条件
+        queryList1 = [{"qw": qw, "value": updateTime, "key": key}]
+        # 查询的表名
+        tableName = tableName
+        data = {
+            "tableName": tableName,
+            "pageNum": pageNum,
+            "pageSize": pageSize,
+            "token": encryption(pageNum, pageSize, queryList, tableName),
+            "queryList": queryList1
+        }
+        data = json.dumps(data)
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        response = requests.post(url, headers=headers, data=data)
+        info = response.json()
+        df = pd.DataFrame(info['data']['list'])
 
-    return df
+        return df
+
+    except Exception as e:
+
+        return pd.DataFrame()
 
 
 
@@ -499,12 +509,14 @@ def ecs_ods_erp(app2, app3, option1):
     '''
     sql4 = "select FInterId, FApplyOrgName, FApplyDeptName, FApplierName, FDate, FNumber, FName,FShortName, FCOUNTRY, FPROVINCIAL, FTEL, FINVOICETITLE, FTAXREGISTERCODE, FBankName, FINVOICETEL, FAccountNumber,FINVOICEADDRESS, FINVOICETYPE, FTaxRate, FCONTACT, FBizAddress, FMOBILE, FSalesman, FAalesDeptName, FCustTypeNo, FGroupNo,F_SZSP_KHFLNo, FSalesGroupNo, FTRADINGCURRNO, FSETTLETYPENO, FRECCONDITIONNO, FPRICELISTNO, FUploadDate, FIsdo,F_SZSP_BLOCNAME, F_SZSP_KHZYJBNo, F_SZSP_KHGHSXNo, F_SZSP_XSMSNo, F_SZSP_XSMSSXNo, F_SZSP_Text from RDS_ECS_ODS_BD_CUSTOMER where FIsdo = 0"
     result = getData(app3, sql4)
-    print(result)
+    # print(result)
 
     api_sdk = K3CloudApiSdk()
 
-    print("开始保存数据")
-    ERP_customersave(api_sdk, option1, result, app2, app3, 'RDS_ECS_SRC_BD_CUSTOMER', 'RDS_ECS_ODS_BD_CUSTOMER')
+    # print("开始保存数据")
+    res=ERP_customersave(api_sdk, option1, result, app2, app3, 'RDS_ECS_SRC_BD_CUSTOMER', 'RDS_ECS_ODS_BD_CUSTOMER')
+
+    return res
 
 
 #  提交
@@ -763,6 +775,8 @@ def ERP_customersave(api_sdk, option, dData, app2, app3, src_table_name, ods_tab
                 changeStatus(app3, "1", ods_table_name, "FNumber", i['FNumber'])
         # break
 
+    return "程序运行完成"
+
 
 # ERP分配后的，保存，提交，审核流程
 def AlloctOperation(number, api_sdk, i, app2, app3):
@@ -829,7 +843,7 @@ def SaveAfterAllocation(api_sdk, i, app2, FNumber104, app3):
 
 
 # 时间入口
-def FCREATEDATE_get_ECS(app2,app3,option1,starttime, endtime):
+def FCREATEDATE_get_ECS(app2,app3,option1,starttime):
 
     url = "https://kingdee-api.bioyx.cn/dynamic/query"
 
@@ -887,6 +901,8 @@ def FCREATEDATE_get_ECS(app2,app3,option1,starttime, endtime):
 
     # 写入金蝶
     ecs_ods_erp(app2, app3, option1)
+
+    return True
 
 
 # 名称入口
@@ -954,5 +970,7 @@ def CUSTOMERNumber_get_ECS(app2,app3,option1,FNumber):
         insert_log2(app3, f"{FNumber}未请求到数据", FNumber)
     # 写入金蝶
     ecs_ods_erp(app2, app3, option1)
+
+    return True
 
 
