@@ -325,8 +325,6 @@ def ecsToDmsByFNumber(app3, codeList):
 
             data = combination(data_info_list, data_base[0], data_stock[0])
 
-            print(data)
-
             if (data['FBaseProperty'] == '' or data['FBaseProperty'] == None) \
                     and (data['FSupplierMaterialCode'] == '' or data['FSupplierMaterialCode'] == None):
 
@@ -422,9 +420,9 @@ def dmsToErp(app2, app3, option, api_sdk):
 
     if odsResult:
 
-        erp_save(app2=app2, app3=app3, option=option, api_sdk=api_sdk, data=odsResult)
+        res=erp_save(app2=app2, app3=app3, option=option, api_sdk=api_sdk, data=odsResult)
 
-        pass
+        return res
 
     else:
 
@@ -870,7 +868,7 @@ def erp_save(app2, app3, option, api_sdk, data):
 
         pass
 
-    pass
+    return True
 
 
 def getGroupNumber(app2, FNumber):
@@ -1343,11 +1341,11 @@ def byFNumber_sync(app2,app3,option,codeList):
 
         erp_save(app2=app2, app3=app3, option=option, api_sdk=api_sdk, data=odsResult)
 
-        pass
+        return True
 
     else:
 
-        return "没有数据需要同步"
+        return False
 
 
 def getOdsDataByFNumber(app3,FNumber):
@@ -1381,7 +1379,9 @@ def performFNumber_bydate(app2,app3,option1,FDate):
 
     dmsToErp(app2=app2, app3=app3, option=option1, api_sdk=api_sdk)
 
-    print("运行结束")
+    # print("运行结束")
+
+    return True
 
 
 

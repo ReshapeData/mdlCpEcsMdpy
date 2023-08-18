@@ -262,9 +262,12 @@ def judgeDetailData(option, app2, app3):
     print(res)
     if res != []:
 
-        insert_into_ERP(option=option, data=res, app2=app2, app3=app3)
+        res=insert_into_ERP(option=option, data=res, app2=app2, app3=app3)
+
+        return res
     else:
-        pass
+
+        return "没有需要同步的供应商"
 
 
 # ODS插入ERP
@@ -279,8 +282,10 @@ def insert_into_ERP(option, data, app2, app3):
     '''
 
     api_sdk = K3CloudApiSdk()
-    print("开始保存数据")
-    ERP_suppliersave(api_sdk, option, data, app2, app3)
+    # print("开始保存数据")
+    res=ERP_suppliersave(api_sdk, option, data, app2, app3)
+
+    return res
 
 
 # 插入错误日志
@@ -792,6 +797,9 @@ def ERP_suppliersave(api_sdk, option, dData, app2, app3):
                 changeStatus(app3, "1", "RDS_ECS_SRC_bd_SupplierDetail", "FNumber", i['FNumber'])
 
 
+    return "程序运行完成"
+
+
 # 数据分配后进行保存提交审核
 def AlloctOperation(api_sdk, i, app2, FNumber104, app3):
     '''
@@ -1011,6 +1019,8 @@ def FNumber_get_supplier(app2, app3, option1, FNumber):
     # 写入金蝶
     judgeDetailData(option1, app2=app2,app3=app3)
 
+    return True
+
 
 def FDate_get_supplier_bydate(app2, app3, option1, Fdate):
     # 新账套
@@ -1071,3 +1081,5 @@ def FDate_get_supplier_bydate(app2, app3, option1, Fdate):
 
     # 写入金蝶
     judgeDetailData(option1, app2,app3)
+
+    return True

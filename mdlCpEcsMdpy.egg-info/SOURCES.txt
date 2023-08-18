@@ -10,3 +10,10 @@ mdlCpEcsMdpy.egg-info/SOURCES.txt
 mdlCpEcsMdpy.egg-info/dependency_links.txt
 mdlCpEcsMdpy.egg-info/requires.txt
 mdlCpEcsMdpy.egg-info/top_level.txt
+tests/testMdByDate_query.py
+tests/testMdByDate_sync.py
+tests/testMdByFNumber_query.py
+tests/testMdByFNumber_sync.py
+tests/testMdErpDataByFNumber_query.py
+tests/testMdLog_query.py
+tests/testMdStatus_upload.py
